@@ -1,0 +1,351 @@
+[
+	{"label": "Live", "action": "livechannels"},
+	{"channels":
+		[{
+			"id": 1,
+			"label": "ProSieben",
+			"domain": "prosieben.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/prosieben.png"
+			},
+			"property_name": "prosieben-de-24x7",
+			"client_location": "https://www.prosieben.de/livestream",
+			"access_token": "prosieben",
+			"client_token":  "01b353c155a9006e80ae7c5ed3eb1c09c0a6995556",
+			"epg_name": "prosieben"
+		},
+		{
+			"id": 2,
+			"label": "SAT.1",
+			"domain": "sat1.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/sat1.png"
+			},
+			"property_name": "sat1-de-24x7",
+			"client_location": "https://www.sat1.de/livestream",
+			"access_token": "sat1",
+			"client_token":  "01e491d866b37341734d691a8acb48af37a77bf26f",
+			"epg_name": "sat1"
+		},
+		{
+			"id": 3,
+			"label": "kabel eins",
+			"domain": "kabeleins.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/kabeleins.png"
+			},
+			"property_name": "kabeleins-de-24x7",
+			"client_location": "https://www.kabeleins.de/livestream",
+			"access_token": "kabeleins",
+			"client_token":  "014c87bfe2ce4aebf6219ed699602a1f152194e4cd",
+			"epg_name": "k1"
+		},
+		{
+			"id": 4,
+			"label": "Sixx",
+			"domain": "sixx.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/sixx.png"
+			},
+			"property_name": "sixx-de-24x7",
+			"client_location": "https://www.sixx.de/livestream",
+			"access_token": "sixx",
+			"client_token":  "017705703133050842d3ca11fc20a6fc205b8b4025",
+			"epg_name": "sixx"
+		},
+		{
+			"id": 5,
+			"label": "ProSiebenMaxx",
+			"domain": "prosiebenmaxx.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/prosiebenmaxx.png"
+			},
+			"property_name" : "prosiebenmaxx-de-24x7",
+			"client_location": "https://www.prosiebenmaxx.de/livestream",
+			"access_token" : "prosiebenmaxx",
+			"client_token":  "01963623e9b364805dbe12f113dba1c4914c24d189",
+			"epg_name": "prosiebenmaxx"
+		},
+		{
+			"id": 6,
+			"label": "SAT.1 Gold",
+			"domain": "sat1gold.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/sat1gold.png"
+			},
+			"property_name" : "sat1gold-de-24x7",
+			"client_location": "https://www.sat1gold.de/livestream",
+			"access_token" : "sat1gold",
+			"client_token": "01107e433196365e4d54d0f90bdf1070cd2df5e190",
+			"epg_name": "sat1gold"
+		},
+		{
+			"id": 7,
+			"label": "kabel eins Doku",
+			"domain": "kabeleinsdoku.de",
+			"path": "/tv",
+			"art": {
+				"icon": "resources/media/channels/kabeleinsdoku.png"
+			},
+			"property_name" : "kabeleinsdoku-de-24x7",
+			"client_location": "https://www.kabeleinsdoku.de/livestream",
+			"access_token" : "kabeleinsdoku",
+			"client_token": "01ea6d32ff5de5d50d0290dbdf819f9b856bcfd44a",
+			"epg_name": "k1doku"
+		},
+		{
+			"id": 8,
+			"action": "subdirs",
+			"label": "ran Sports",
+			"art": {
+				"icon": "resources/media/channels/ran.png"
+			},
+			"children":
+			[{
+				"label": "[B]Live ({0})[/B]",
+				"action": "liveevents",
+				"domain": "ran.de",
+				"art": {
+					"icon": "resources/media/ran_thumbs/thumb_main.jpg"
+				},
+				"plot": "Alle Sendertermine und Streams zu zuk\u00fcnftigen Live Events auf ran.de"
+			},
+			{
+				"label": "American Football: College",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/us-sport/college-football/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_college_football.jpg"
+				},
+				"plot": "Football-Fans aufgepasst: ProSieben MAXX pr\u00e4sentiert die NFL-Stars von morgen und \u00fcbertr\u00e4gt College Football live im Free-TV. Hier treten die Teams der amerikanischen Top-Universit\u00e4ten gegeneinander an."
+			},
+			{
+				"label": "American Football: NFL",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/us-sport/nfl/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_fooball.jpg"
+				},
+				"plot": "Auf ProSieben MAXX fliegen wieder die Eier: Patrick Esume, Bj\u00f6rn Werner, Jan Stecker, Roman Motzkus, Volker Schenk, Uwe Morawe, Carsten Spengemann und Icke gehen wieder #jedenverdammtenSonntag ran an die NFL mit drei Livespielen und nat\u00fcrlich die Playoffs und der Super Bowl."
+			},
+			{
+				"label": "Basketball",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/basketball/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_basketball.jpg"
+				},
+				"plot": "Hier findest du alle Infos zu europ\u00e4ischem Basketball von ran.de"
+			},
+			{
+				"label": "Beachvolleyball",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/beachvolleyball/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_beachvolleyball.jpg"
+				},
+				"plot": "Hier findest du alle Videos zum DVV, World Tour und FIVB von ran.de"
+			},
+			{
+				"label": "Boxen",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/boxen/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ran_fighting.jpg"
+				},
+				"plot": "Boxen aktuell: Alle Videos zum BOX-Sport von ran.de"
+			},
+			{
+				"label": "Darts",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/darts/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ran_darts.jpg"
+				},
+				"plot": "ProSieben MAXX und ProSieben pr\u00e4sentieren das Darts-Event des Jahres live aus der K\u00f6lner Lanxess Arena: Die \"World Series of Darts - German Masters 2019\"."
+			},
+			{
+				"label": "DTM",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/motorsport/dtm/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ran_dtm.jpg"
+				},
+				"plot": "Alle DTM-Rennen werden live und exklusiv in SAT.1 \u00fcbertragen, die Qualifyings und die Freien Trainings werden im Livestream auf ran.de zu sehen sein."
+			},
+			{
+				"label": "European League of Football",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/us-sport/elf/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/efl.png"
+				},
+				"plot": "Alle Infos zur neuen European League of Football (von Coach Esume) von ran.de"
+			},
+			{
+				"label": "eSports",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/esports/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_esports.jpg"
+				},
+				"plot": "Bei \"ran eSports - Professional. Gaming. Magazine.\" werden vor allem die Computerspiele \"CS:GO\" (Counter-Strike: Global Offensive),\"League of Legends\" (LoL), \"DOTA 2\", \"FIFA\", \"Madden NFL\" oder \"Rocket League\" von Moderator Matthias \"Knochen\" Remmert unter die Lupe genommen."
+			},
+			{
+				"label": "Formel E",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/motorsport/formel-e/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/formula_e.jpg"
+				},
+				"plot": "ReLive und Videos zur Formel-E"
+			},
+			{
+				"label": "Fu\u00dfball",
+				"action": "subdirs",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_fussball.jpg"
+				},
+				"plot": "Video von den verschiedenen Fussball-Ligen auf ran.de",
+				"children":
+				[{
+					"action": "videostruct",
+					"label": "Bundesliga",
+					"action": "videostruct",
+					"domain": "ran.de",
+					"path": "/fussball/bundesliga/video"
+				},{
+					"action": "videostruct",
+					"label": "U21",
+					"action": "videostruct",
+					"domain": "ran.de",
+					"path": "/fussball/u21/video"
+				},{
+					"action": "videostruct",
+					"label": "International",
+					"action": "videostruct",
+					"domain": "ran.de",
+					"path": "/fussball/international/video"
+				},{
+					"action": "videostruct",
+					"label": "Weltmeisterschaft",
+					"action": "videostruct",
+					"domain": "ran.de",
+					"path": "/fussball/weltmeisterschaft/video"
+				},{
+					"action": "videostruct",
+					"label": "Europameisterschaft",
+					"action": "videostruct",
+					"domain": "ran.de",
+					"path": "/fussball/europameisterschaft/video"
+				}]
+			},
+			{
+				"label": "Handball",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/handball/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/handball.jpg"
+				},
+				"plot": "Handball auf ran.de: Hier findest du die neuesten Videos zur Handball-WM, Handball-Champions-League und zur Handball-Bundesliga (HBL)."
+			},
+			{
+				"label": "Kampfsport",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/kampfsport/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ran_fighting.jpg"
+				},
+				"plot": "Kampfsport aktuell: Alle Videos zu GMC, We Love MMA, Judo und Karate von ran.de"
+			},
+			{
+				"label": "Motorsport",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/motorsport/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_racing.jpg"
+				},
+				"plot": "Motorsport auf ran.de: Hier findest du alle Videos zur Formel 1, Rallye, Nascar, GT-Masters und DTM von ran.de"
+			},
+			{
+				"label": "NBA",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/us-sport/nba/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/nba.jpg"
+				},
+				"plot": "National Basketball Association auf ran.de: Hier findest du alle Ergebnisse der NBA."
+			},
+			{
+				"label": "Rugby",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/rugby/video",
+				"art": {
+					"icon": "resources/media/ran_thumbs/ran_rugby.jpg"
+				},
+				"plot": "Auf ProSieben MAXX fliegen ab sofort noch mehr Eier. Wir \u00fcbertragen den Rugby League World Cup live und exklusiv im deutschen Fernsehen."
+			},
+			{
+				"label": "Tennis",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/tennis/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/tennis.jpg"
+				},
+				"plot": "ReLive und Videos zu ATP, WTA, Davis Cup und den Grand-Slam-Turnieren von ran.de"
+			},
+			{
+				"label": "UFC",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/ufc/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ufc.jpg"
+				},
+				"plot": "Ultimate Fighting League: Alle Videos zur UFC von ran.de"
+			},
+			{
+				"label": "US-Sport",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/us-sport/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/ran_us_sports.jpg"
+				},
+				"plot": "US Sports aktuell: Alle Videos der NFL, NBA, NHL und MLB von ran.de"
+			},
+			{
+				"label": "WWE",
+				"action": "videostruct",
+				"domain": "ran.de",
+				"path": "/wwe/video",
+                "art": {
+					"icon": "resources/media/ran_thumbs/wwe.jpg"
+				},
+				"plot": "Videos zur World Wrestling Entertainment (WWE) von ran.de"
+			}]
+		}]
+	}
+]

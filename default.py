@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-from kodi_six.utils import py2_encode
-import sys
-import os
-import re
-import xbmc
-import xbmcgui
-import xbmcplugin
-import xbmcaddon
-import json
-import xbmcvfs
-import requests
+from kodi_six.utils import py2_encode, py2_decode
+
+import _strptime
+
 import base64
-from inputstreamhelper import Helper
-from hashlib import sha1
 import calendar
 from datetime import datetime, timedelta
+from hashlib import sha1, sha256
+from inputstreamhelper import Helper
+import json
+import os
+import re
+import requests
+import sys
 import time
+
+import xbmc
+import xbmcaddon
+import xbmcgui
+import xbmcplugin
+import xbmcvfs
 
 try:
     import urllib.parse as urllib
@@ -26,106 +30,15 @@ except ImportError:
 
 addon_handle = int(sys.argv[1])
 addon = xbmcaddon.Addon()
-addonPath = xbmc.translatePath(addon.getAddonInfo('path'))
+addonPath = py2_decode(xbmc.translatePath(addon.getAddonInfo('path')))
 defaultFanart = os.path.join(addonPath, 'resources/fanart.png')
 icon = os.path.join(addonPath, 'resources/icon.png')
 baseURL = "https://www."
 pluginBaseUrl = "plugin://{0}".format(addon.getAddonInfo('id'))
-userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36'
+userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
 bv = xbmc.getInfoLabel('System.BuildVersion')
 kodiVersion = int(bv.split('.')[0])
-
-channels = [
-               {
-                  'id': '1'
-                , 'label': 'ProSieben'
-                , 'domain': 'prosieben.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/prosieben.png')}
-                , 'property_name': 'prosieben-de-24x7'
-                , 'client_location': 'https://www.prosieben.de/livestream'
-                , 'access_token': 'prosieben'
-                , 'client_token':  '01b353c155a9006e80ae7c5ed3eb1c09c0a6995556'
-                , 'epg_name': 'prosieben'
-              }
-            , {
-                  'id': '2'
-                , 'label': 'SAT.1'
-                , 'domain': 'sat1.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/sat1.png')}
-                , 'property_name': 'sat1-de-24x7'
-                , 'client_location': 'https://www.sat1.de/livestream'
-                , 'access_token': 'sat1'
-                , 'client_token':  '01e491d866b37341734d691a8acb48af37a77bf26f'
-                , 'epg_name': 'sat1'
-              }
-            , {
-                  'id': '3'
-                , 'label': 'kabel eins'
-                , 'domain': 'kabeleins.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/kabeleins.png')}
-                , 'property_name': 'kabeleins-de-24x7'
-                , 'client_location': 'https://www.kabeleins.de/livestream'
-                , 'access_token': 'kabeleins'
-                , 'client_token':  '014c87bfe2ce4aebf6219ed699602a1f152194e4cd'
-                , 'epg_name': 'k1'
-              }
-            , {
-                  'id': '4'
-                , 'label': 'Sixx'
-                , 'domain': 'sixx.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/sixx.png')}
-                , 'property_name': 'sixx-de-24x7'
-                , 'client_location': 'https://www.sixx.de/livestream'
-                , 'access_token': 'sixx'
-                , 'client_token':  '017705703133050842d3ca11fc20a6fc205b8b4025'
-                , 'epg_name': 'sixx'
-              }
-            , {
-                  'id': '5'
-                , 'label': 'ProSiebenMaxx'
-                , 'domain': 'prosiebenmaxx.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/prosiebenmaxx.png')}
-                , 'property_name' : 'prosiebenmaxx-de-24x7'
-                , 'client_location': 'https://www.prosiebenmaxx.de/livestream'
-                , 'access_token' : 'prosiebenmaxx'
-                , 'client_token':  '01963623e9b364805dbe12f113dba1c4914c24d189'
-                , 'epg_name': 'prosiebenmaxx'
-              }
-            , {
-                  'id': '6'
-                , 'label': 'SAT.1 Gold'
-                , 'domain': 'sat1gold.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/sat1gold.png')}
-                , 'property_name' : 'sat1gold-de-24x7'
-                , 'client_location': 'https://www.sat1gold.de/livestream'
-                , 'access_token' : 'sat1gold'
-                , 'client_token': '01107e433196365e4d54d0f90bdf1070cd2df5e190'
-                , 'epg_name': 'sat1gold'
-              }
-            , {
-                  'id': '7'
-                , 'label': 'kabel eins Doku'
-                , 'domain': 'kabeleinsdoku.de'
-                , 'path': '/tv'
-                , 'art': {'icon': os.path.join(addonPath, 'resources/media/channels/kabeleinsdoku.png')}
-                , 'property_name' : 'kabeleinsdoku-de-24x7'
-                , 'client_location': 'https://www.kabeleinsdoku.de/livestream'
-                , 'access_token' : 'kabeleinsdoku'
-                , 'client_token': '01ea6d32ff5de5d50d0290dbdf819f9b856bcfd44a'
-                , 'epg_name': 'k1doku'
-              }
-           ]
-
-rootDirs = [
-              {'label': 'Live', 'action': 'livechannels'}
-            , {'channels': channels}
-           ]
+dayNames = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 
 
 def listShows(entry):
@@ -204,6 +117,109 @@ def listShowcontent(entry):
     xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
 
 
+def listVideostruct(entry):
+    content = getContentFull(entry.get('domain'), entry.get('path'))
+    if content and content.get('data', None):
+        structs = dict(folder=list(), videos=list())
+        if content.get('data').get('site', None) and content.get('data').get('site').get('path', None) and content.get('data').get('site').get('path').get('content', None) and content.get('data').get('site').get('path').get('content').get('areas', None):
+            areas = content.get('data').get('site').get('path').get('content').get('areas')
+            if areas:
+                for area in areas:
+                    if area.get('id') == 'right':
+                        continue
+                    containers = area.get('containers')
+                    for container in containers:
+                        elements = container.get('elements', None)
+                        if elements:
+                            element = elements[0]
+                            groups = element.get('groups', None)
+                            if groups and groups[0].get('items'):
+                                if element.get('title') and area.get('id') == 'bottom':
+                                    structs.get('folder').append(element.get('title'))
+                                else:
+                                    for item in groups[0].get('items'):
+                                        if item.get('contentType') == 'video':
+                                            structs.get('videos').append(item)
+                                    if groups[0].get('cursor'):
+                                        structs.update(dict(pagination=dict(cursor=groups[0].get('cursor'), id=element.get('id'))))
+
+        if structs.get('videos'):
+            for item in structs.get('videos'):
+                build_video(item, entry.get('domain'))
+
+            if structs.get('pagination'):
+                if len(structs.get('folder')) == 0:
+                    build_pagination_dir(entry.get('domain'), structs.get('pagination').get('id'), structs.get('pagination').get('cursor'), 2)
+                else:
+                    cursor = structs.get('pagination').get('cursor')
+                    while cursor:
+                        content = getPagination(entry.get('domain'), structs.get('pagination').get('id'), cursor)
+                        cursor = None
+                        if content and content.get('data', None):    
+                            if content.get('data').get('site', None) and content.get('data').get('site').get('items', None):
+                                pagination_videos = content.get('data').get('site').get('items').get('items')
+                                if pagination_videos:
+                                    for video in pagination_videos:
+                                        build_video(video, entry.get('domain'))
+                                cursor = content.get('data').get('site').get('items').get('cursor')
+
+        for folder in structs.get('folder'):
+            art = dict()
+            infoLabels = dict(plot=folder)
+
+            url = build_url({'action': 'videos', 'entry': entry, 'folder': folder})
+            addDir(label=folder, url=url, art=art, infoLabels=infoLabels)
+
+    xbmcplugin.setContent(addon_handle, 'files')
+    xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
+
+
+def listVideos(entry, folder):
+    content = getContentFull(entry.get('domain'), entry.get('path'))
+    if content and content.get('data', None):
+        videos = dict(items=list())
+        if content.get('data').get('site', None) and content.get('data').get('site').get('path', None) and content.get('data').get('site').get('path').get('content', None) and content.get('data').get('site').get('path').get('content').get('areas', None):
+            areas = content.get('data').get('site').get('path').get('content').get('areas')
+            if areas:
+                for area in areas:
+                    containers = area.get('containers')
+                    for container in containers:
+                        elements = container.get('elements', None)
+                        if elements:
+                            element = elements[0]
+                            groups = element.get('groups', None)
+                            if groups and element.get('title') == folder:
+                                videos.get('items').extend(groups[0].get('items'))
+                                if groups[0].get('cursor'):
+                                    videos.update(dict(pagination=dict(cursor=groups[0].get('cursor'), id=element.get('id'))))
+
+        if videos.get('items'):
+            for item in videos.get('items'):
+                build_video(item, entry.get('domain'))
+
+            if videos.get('pagination'):
+                build_pagination_dir(entry.get('domain'), videos.get('pagination').get('id'), videos.get('pagination').get('cursor'), 2)
+
+    xbmcplugin.setContent(addon_handle, 'files')
+    xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
+
+
+def listPaginationVideos(entry):
+    content = getPagination(entry.get('domain'), entry.get('path'), entry.get('cursor'))
+    if content and content.get('data', None):    
+        if content.get('data').get('site', None) and content.get('data').get('site').get('items', None):
+            videos = content.get('data').get('site').get('items').get('items')
+            if videos:
+                for video in videos:
+                    build_video(video, entry.get('domain'))
+
+                if content.get('data').get('site').get('items').get('cursor'):
+                    build_pagination_dir(entry.get('domain'), entry.get('path'), content.get('data').get('site').get('items').get('cursor'), entry.get('page') + 1)
+
+    xbmcplugin.setContent(addon_handle, 'files')
+    xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
+
+
 def getContentFull(domain, path):
     base = 'https://magellan-api.p7s1.io/content-full/{0}{1}/graphql'.format(domain, path)
     parameters = {'query': ' query FullContentQuery($domain: String!, $url: String!, $date: DateTime, $contentType: String, $debug: Boolean!, $authentication: AuthenticationInput) { site(domain: $domain, date: $date, authentication: $authentication) { domain path(url: $url) { content(type: FULL, contentType: $contentType) { ...fContent } somtag(contentType: $contentType) { ...fSomtag } tracking(contentType: $contentType) { ...fTracking } } } } fragment fContent on Content { areas { ...fContentArea } } fragment fContentArea on ContentArea { id containers { ...fContentContainer } filters { ...fFilterOptions } debug @include(if: $debug) { ...fContentDebugInfo } } fragment fContentContainer on ContentContainer { id style elements { ...fContentElement } } fragment fContentElement on ContentElement { id authentication title description component config style highlight navigation { ...fNavigationItem } regwall filters { ...fFilterOptions } update styleModifiers groups { id title total cursor itemSource { type id } items { ...fContentElementItem } debug @include(if: $debug) { ...fContentDebugInfo } } groupLayout debug @include(if: $debug) { ...fContentDebugInfo } } fragment fNavigationItem on NavigationItem { selected href channel { ...fChannelInfo } contentType title items { selected href channel { ...fChannelInfo } contentType title } } fragment fChannelInfo on ChannelInfo { title shortName cssId cmsId } fragment fFilterOptions on FilterOptions { type remote categories { name title options { title id channelId } } } fragment fContentElementItem on ContentElementItem { id url info branding { ...fBrand } body config headline contentType channel { ...fChannelInfo } site picture { url } videoType orientation date duration flags genres valid { from to } epg { episode { ...fEpisode } season { ...fSeason } duration nextEpgInfo { ...fEpgInfo } } debug @include(if: $debug) { ...fContentDebugInfo } } fragment fBrand on Brand { id, name } fragment fEpisode on Episode { number } fragment fSeason on Season { number } fragment fEpgInfo on EpgInfo { time endTime primetime } fragment fContentDebugInfo on ContentDebugInfo { source transformations { description } } fragment fSomtag on Somtag { configs } fragment fTracking on Tracking { context }'}
@@ -230,6 +246,31 @@ def getContentPreview(domain, path):
     if result and path.endswith('/video') and result.get('data', None) and result.get('data').get('site', None) and result.get('data').get('site').get('path', None) and result.get('data').get('site').get('path').get('route').get('status').lower() == 'not_found':
         result = getContentPreview(domain, '{0}s'.format(path))
     return result
+
+
+def getPagination(domain, path, cursor):
+    base = 'https://magellan-api.p7s1.io/pagination/{0}/{1}/graphql'.format(domain, path)
+    parameters = {'query': ' query QueryItems($domain: String!, $elementId: String!, $channelContext: String, $groupId: String, $cursor: String, $filter: FilterStateInputType, $limit: Int, $debug: Boolean!, $authentication: AuthenticationInput) { site(domain: $domain, authentication: $authentication) { items(element: $elementId, channelContext: $channelContext, group: $groupId, cursor: $cursor, filter: $filter, limit: $limit) { id title total cursor itemSource { type id } items { ...fContentElementItem } debug @include(if: $debug) { ...fContentDebugInfo } } } } fragment fContentElementItem on ContentElementItem { id listIndex url target foldOut info branding { ...fBrand } body config headline contentType channel { ...fChannelInfo } site picture { url } pictures { url dimension name title copyright description orientation imageOverlayTarget imageOverlayType kicker } candidate { firstName teamName headline cssId contestantType status comments { threadId } voting { result { candidateCmsId voteCount dimensions ranking } userVote } linkedPersons: linkedPersonsAny } product { price displayedPrice productLink } videoType orientation date duration flags genres valid { from to } epg { episode { ...fEpisode } season { ...fSeason } duration nextEpgInfo { ...fEpgInfo } } debug @include(if: $debug) { ...fContentDebugInfo } } fragment fBrand on Brand { id, name } fragment fChannelInfo on ChannelInfo { title shortName cssId cmsId } fragment fEpisode on Episode { number } fragment fSeason on Season { number } fragment fEpgInfo on EpgInfo { time endTime primetime branding { name } } fragment fContentDebugInfo on ContentDebugInfo { source transformations { description } } '}
+    parameters.update({'variables': '{{"authentication":null,"cursor":"{0}","debug":false,"domain":"{1}","elementId":"{2}","limit":18}}'.format(cursor, domain, path)})
+    url = '{0}?{1}'.format(base, urllib.urlencode(parameters).replace('+', '%20'))
+    url = '{0}&queryhash={1}'.format(url, sha256(url.encode('utf-8')).hexdigest())
+    xbmc.log('url = {0}'.format(url))
+    result = requests.get(url).json()
+    return result
+
+
+def getLiveevents(domain, std):
+    url = 'https://middleware.7tv.de/ran-mega/mobile/v1/livestreams.json'
+    result = requests.get(url, headers={'Accept-Encoding': 'gzip'}).json()
+    return result
+    #base = 'https://magellan-api.p7s1.io/epg-mini/{0}/graphql'.format(domain)
+    #parameters = {'query': ' query EpgQuery($domain: String!, $date: DateTime, $subBrand: String) { site(domain: $domain) { epgs { upcoming: broadcast(type: UPCOMING, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primetime: broadcast(type: PRIMETIME, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primenight: broadcast(type: PRIMENIGHT, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } } } } fragment fEpgItem on EpgItem { id title description startTime endTime episode { number } season { number } tvShow { title id } images { url title copyright } links { href contentType title } } '}
+    #parameters.update({'variables': '{{"date":"{0}","domain":"{1}"}}'.format(std, domain)})
+    #url = '{0}?{1}'.format(base, urllib.urlencode(parameters).replace('+', '%20'))
+    #url = '{0}&queryhash={1}'.format(url, sha256(url.encode('utf-8')).hexdigest())
+    #xbmc.log('url = {0}'.format(url))
+    #result = requests.get(url).json()
+    #return result
 
 
 def getListItems(data, type, domain=None, path=None, cmsId=None, content=None):
@@ -325,8 +366,10 @@ def getContentInfos(data, type):
                 infoLabels.update({'tvShowTitle': now_item.get('tvShow').get('title')})
                 infoLabels.update({'mediatype': 'episode'})
 
-            infoLabels.update({'season': now_item.get('season').get('number')})
-            infoLabels.update({'episode': now_item.get('episode').get('number')})
+            if now_item.get('season').get('number') and int(now_item.get('season').get('number')) > 0:
+                infoLabels.update({'season': now_item.get('season').get('number')})
+            if now_item.get('episode').get('number') and int(now_item.get('episode').get('number')) > 0:
+                infoLabels.update({'episode': now_item.get('episode').get('number')})
 
             local_start_time = utc_to_local(infos.get('stime'))
             local_end_time = utc_to_local(infos.get('etime'))
@@ -428,25 +471,20 @@ def getVideoId(data):
 
 
 def playVideo(entry):
-    video_id = None
+    # Inputstream and DRM
+    helper = Helper(protocol='mpd', drm='widevine')
+    isInputstream = helper.check_inputstream()
+    if isInputstream == False:
+        return
+
+    access_token = 'seventv-web'
+    salt = '01!8d8F_)r9]4s[qeuXfP%'
+    client_name = ''
+    
     content = getContentPreview(entry.get('domain'), entry.get('path'))
     if content:
         video_id = getVideoId(content.get('data'))
 
-    # Inputstream and DRM
-    helper = Helper(protocol='mpd', drm='widevine')
-    isInputstream = helper.check_inputstream()
-
-    if not isInputstream:
-        access_token = 'h''b''b''t''v'
-        salt = '0''1''r''e''e''6''e''L''e''i''w''i''u''m''i''e''7''i''e''V''8''p''a''h''g''e''i''T''u''i''3''B'
-        client_name = 'h''b''b''t''v'
-    else:
-        access_token = 'seventv-web'
-        salt = '01!8d8F_)r9]4s[qeuXfP%'
-        client_name = ''
-
-    source_id = 0
     json_url = 'http://vas.sim-technik.de/vas/live/v2/videos/{0}?{1}'.format(video_id, urllib.urlencode({
             'access_token': access_token,
             'client_location': entry.get('path'),
@@ -454,20 +492,11 @@ def playVideo(entry):
         }))
     json_data = requests.get(json_url).json()
 
-    if isInputstream:
-        for stream in json_data['sources']:
-            if stream['mimetype'] == 'application/dash+xml':
-                if int(source_id) < int(stream['id']):
-                    source_id = stream['id']
-    else:
-        if json_data["is_protected"] == True:
-            xbmc.executebuiltin('Notification("Inputstream", "DRM geschützte Folgen gehen nur mit Inputstream")')
-            return
-        else:
-            for stream in json_data['sources']:
-                if stream['mimetype'] == 'video/mp4':
-                    if int(source_id) < int(stream['id']):
-                        source_id = stream['id']
+    source_id = 0
+    for stream in json_data['sources']:
+        if stream['mimetype'] == 'application/dash+xml':
+            if int(source_id) < int(stream['id']):
+                source_id = stream['id']
 
     client_id_1 = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(video_id, salt, access_token, entry.get('path'), salt, client_name).encode('utf-8')).hexdigest())
 
@@ -480,7 +509,6 @@ def playVideo(entry):
     json_data = requests.get(json_url).json()
     server_id = json_data['server_id']
 
-    # client_name = 'kolibri-1.2.5'
     client_id = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}{6}{7}'.format(salt, video_id, access_token, server_id, entry.get('path'), source_id, salt, client_name).encode('utf-8')).hexdigest())
     url_api_url = 'http://vas.sim-technik.de/vas/live/v2/videos/{0}/sources/url?{1}'.format(video_id, urllib.urlencode({
         'access_token': access_token,
@@ -492,17 +520,8 @@ def playVideo(entry):
     }))
 
     json_data = requests.get(url_api_url).json()
-    max_id = 0
-    for stream in json_data["sources"]:
-        ul = stream["url"]
-        try:
-            sid = re.compile('-tp([0-9]+).mp4', re.DOTALL).findall(ul)[0]
-            id = int(sid)
-            if max_id < id:
-                max_id = id
-                data = ul
-        except:
-          data = ul
+    for stream in json_data['sources']:
+        data = stream.get('url')
 
     li = xbmcgui.ListItem(path='{0}|{1}'.format(data, userAgent))
     li.setProperty('inputstream.adaptive.license_type', 'com.widevine.alpha')
@@ -510,8 +529,8 @@ def playVideo(entry):
     li.setProperty('inputstreamaddon' if kodiVersion <= 18 else 'inputstream', 'inputstream.adaptive')
 
     try:
-        lic = json_data['drm']['licenseAcquisitionUrl']
-        token = json_data['drm']['token']
+        lic = json_data.get('drm').get('licenseAcquisitionUrl')
+        token = json_data.get('drm').get('token')
         li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(lic, token, userAgent, 'R{SSM}'))
     except:
         pass
@@ -539,8 +558,15 @@ def playLive(entry):
     data = requests.get(url).json()
 
     server_token = data.get('server_token')
-    salt = '01!8d8F_)r9]4s[qeuXfP%'
-    client_token = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(entry.get('property_name'), salt, entry.get('access_token'), server_token, entry.get('client_location'), 'dash:widevine').encode('utf-8')).hexdigest())
+    salt = entry.get('salt', '01!8d8F_)r9]4s[qeuXfP%')
+    protokol = 'dash'
+    if 'widevine' in data.get('protocols').get('dash').get('drm'):
+        protokol_drm = 'widevine'
+        protokol_param = '{0}:{1}'.format(protokol, protokol_drm)
+    else:
+        protokol_drm = 'clear'
+        protokol_param = protokol
+    client_token = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(entry.get('property_name'), salt, entry.get('access_token'), server_token, entry.get('client_location'), protokol_param).encode('utf-8')).hexdigest())
 
     url = 'https://vas-live-mdp.glomex.com/live/1.0/geturls?{0}'.format(urllib.urlencode({
         'access_token':  entry.get('access_token'),
@@ -552,17 +578,19 @@ def playLive(entry):
         'secure_delivery': 'true'
     }))
 
-    data = requests.get(url).json()['urls']['dash']['widevine']
+    data = requests.get(url).json()
+    url = data['urls']['dash']['widevine']['url']
 
-    li = xbmcgui.ListItem(path='{0}|{1}'.format(data['url'], userAgent))
+    li = xbmcgui.ListItem(path='{0}|{1}'.format(url, userAgent))
     li.setProperty('inputstream.adaptive.license_type', 'com.widevine.alpha')
     li.setProperty('inputstream.adaptive.manifest_type', 'mpd')
-    li.setProperty('inputstream.adaptive.manifest_update_parameter', 'full')
+    if addon.getSetting('sync_timing') == 'true':
+        li.setProperty('inputstream.adaptive.manifest_update_parameter', 'full')
     li.setProperty('inputstreamaddon' if kodiVersion <= 18 else 'inputstream', 'inputstream.adaptive')
 
     try:
-        lic = data['drm']['licenseAcquisitionUrl']
-        token = data['drm']['token']
+        lic = data['urls']['dash']['widevine']['drm']['licenseAcquisitionUrl']
+        token = data['urls']['dash']['widevine']['drm']['token']
         li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(lic, token, userAgent, 'R{SSM}'))
     except:
         pass
@@ -571,6 +599,7 @@ def playLive(entry):
 
 
 def rootDir():
+    rootDirs = json.load(py2_decode(open('{0}/resources/root.json'.format(addonPath))))
     for dir in rootDirs:
         if not dir.get('channels'):
             url = build_url({'action': dir.get('action')})
@@ -578,13 +607,47 @@ def rootDir():
         else:
             channels = dir.get('channels')
             for channel in channels:
-                parameter = {'action': 'shows', 'entry': channel}
+                if channel.get('art'):
+                    for artkey in channel.get('art').keys():
+                        channel.get('art').update({artkey: os.path.join(addonPath, channel.get('art').get(artkey))})
+                parameter = {'action': channel.get('action', 'shows'), 'entry': channel}
                 addDir(label=channel.get('label'), url=build_url(parameter), art=channel.get('art'))
 
     xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
 
 
+def listChildren(entry):
+    for child in entry.get('children'):
+        art = dict()
+        if child.get('art'):
+            for artkey in child.get('art').keys():
+                art.update({artkey: os.path.join(addonPath, child.get('art').get(artkey))})
+
+        infoLabels = dict()
+        if child.get('plot'):
+            infoLabels.update(dict(plot=child.get('plot')))
+        label = child.get('label')
+        if label.find('Live') >= 0:
+            nt = time.time()
+            number_livestreams = 0
+            content = getLiveevents(None, None)
+            for event in content.get('contents'):            
+                if event.get('streamdate_end') >= nt and event.get('streamdate_start') <= nt:
+                    number_livestreams += 1
+            label = label.format(number_livestreams)
+        parameter = {'action': child.get('action'), 'entry': child}
+        addDir(label=label, url=build_url(parameter), art=art, infoLabels=infoLabels)
+
+    xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=True)
+
+
 def listLiveChannels():
+    channels = dict()
+    rootDirs = json.load(py2_decode(open('{0}/resources/root.json'.format(addonPath))))
+    for dir in rootDirs:
+        if dir.get('channels'):
+            channels = dir.get('channels')
+
     content = getContentPreview(channels[0].get('domain'), '/livestream')
     epg_data = None
     if content.get('data') and content.get('data').get('site') and content.get('data').get('site').get('path') and content.get('data').get('site').get('path').get('page') and content.get('data').get('site').get('path').get('page').get('epg'):
@@ -612,15 +675,90 @@ def listLiveChannels():
     xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
 
 
+def listLiveevents(entry):
+    contextmenuitems = [(('Aktualisieren', 'RunPlugin({0})'.format(build_url({'action': 'refresh'}))))]
+    content = getLiveevents(None, None)
+    events = sorted(content.get('contents'), key=lambda k: k.get('streamdate_start'))
+    eventday = None;
+    for event in events:
+        sdt = datetime.fromtimestamp(event.get('streamdate_start'))
+        edt = datetime.fromtimestamp(event.get('streamdate_end'))
+
+        match_date = sdt.strftime('%d.%m.%Y')
+        match_time = sdt.strftime('%H:%M')
+        match_weekday = dayNames[sdt.weekday()]
+        if eventday is None or eventday < sdt.date():
+            eventday = sdt.date()
+            addFile('[COLOR gold]{0}, {1}[/COLOR]'.format(match_weekday, match_date), None, art=dict(thumb='DefaultYear.png'), isPlayable=False)
+
+        
+        url = build_url({'action': 'liveitem', 'entry': dict(resource=event.get('resource'), st=event.get('streamdate_start'), et=event.get('streamdate_end'))})
+        addFile('[COLOR red]{0}[/COLOR] {1}'.format(match_time, event.get('teaser').get('title')), url, contextMenuItems=contextmenuitems, art=dict(icon=event.get('teaser').get('image')))
+
+    #xbmcplugin.setContent(addon_handle, 'files')
+    xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
+
+
+
+    #std = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    #content = getLiveevents(entry.get('domain'), std.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+
+    #contextmenuitems = [(('Aktualisieren', 'RunPlugin({0})'.format(build_url({'action': 'refresh'}))))]
+    #if content.get('data') and content.get('data').get('site') and content.get('data').get('site').get('epgs') and content.get('data').get('site').get('epgs').get('upcoming'):
+    #    events = content.get('data').get('site').get('epgs').get('upcoming').get('items')
+    #    eventicon = os.path.join('{0}{1}'.format(addonPath, entry.get('art').get('icon')))
+    #    eventday = None;
+    #    for event in events:
+    #        sdt = utc_to_local(datetime.strptime(event.get('startTime'), '%Y-%m-%dT%H:%M:%S.%fZ'))
+    #        match_date = sdt.strftime('%d.%m.%Y')
+    #        match_time = sdt.strftime('%H:%M')
+    #        match_weekday = dayNames[sdt.weekday()]
+    #        if eventday is None or eventday < sdt.date():
+    #            eventday = sdt.date()
+    #            addFile('[COLOR gold]{0}, {1}[/COLOR]'.format(match_weekday, match_date), None, art=dict(thumb='DefaultYear.png'), isPlayable=False)
+
+    #        url = ''#build_url({'action': 'playlive', 'entry': channel})
+    #        addFile('[COLOR red]{0}[/COLOR] {1}'.format(match_time, event.get('title')), url, contextMenuItems=contextmenuitems, art=dict(icon=eventicon))
+
+    #xbmcplugin.setContent(addon_handle, 'files')
+    #xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
+
+
+def build_liveitem(entry):
+    nt = time.time()
+    if entry.get('st') > nt or entry.get('et') < nt:
+        if entry.get('st') > nt:
+            msg = 'noch nicht'
+        else:
+            msg = 'nicht mehr'
+        msg = 'Der Stream ist {0} verfügbar'.format(msg)
+        xbmcgui.Dialog().ok(addon.getAddonInfo('name'), msg)
+        xbmcplugin.setResolvedUrl(addon_handle, False, xbmcgui.ListItem())
+        return False
+
+    url = '{0}{1}'.format('https://middleware.7tv.de', entry.get('resource'))
+    result = requests.get(url, headers={'Accept-Encoding': 'gzip'}).json()
+
+    stream_url = result.get('stream_url')
+    salt = '01iegahthei8yok0Eopai6jah5Qui0qu'
+    access_token = 'ran-app'
+    location = 'https://app.ran.de/{0}'.format(stream_url)
+    client_token = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}'.format(stream_url, salt, access_token, location).encode('utf-8')).hexdigest())
+    item = dict(access_token=access_token, client_location=location, property_name=stream_url, client_token=client_token, salt=salt)
+    playLive(item)
+
+
 def addDir(label, url, art={}, infoLabels={}):
-    addFile(label=label, url=url, art=art, infoLabels=infoLabels, isFolder=True)
+    addFile(label=label, url=url, art=art, infoLabels=infoLabels, isFolder=True, isPlayable=False)
 
 
-def addFile(label, url, art={}, infoLabels={}, contextMenuItems=[], isFolder=False):
+def addFile(label, url, art={}, infoLabels={}, contextMenuItems=[], isFolder=False, isPlayable=True):
     li = xbmcgui.ListItem(label)
-    li.setInfo('video', infoLabels)
+    if infoLabels or isPlayable:
+        li.setInfo('video', infoLabels)
     li.setArt(art)
-    li.setProperty('IsPlayable', str(isFolder))
+    if isPlayable == True:
+        li.setProperty('IsPlayable', str(isPlayable))
     if len(contextMenuItems) > 0:
         li.addContextMenuItems(contextMenuItems)
 
@@ -629,6 +767,43 @@ def addFile(label, url, art={}, infoLabels={}, contextMenuItems=[], isFolder=Fal
 
 def build_url(query):
     return '{0}?{1}'.format(pluginBaseUrl, base64.urlsafe_b64encode(json.dumps(query).encode('utf-8')).decode('utf-8'))
+
+
+def build_video(item, domain):
+    art = dict()
+    if item.get('picture'):
+        art.update(dict(poster='{0}/profile:mag-648x366'.format(item.get('picture').get('url'))))
+
+    infoLabels = dict()
+    if item.get('info'):
+        infoLabels.update(dict(plot=item.get('info')))
+    if item.get('duration'):
+        infoLabels.update(dict(duration=item.get('duration')))
+    if item.get('valid', {}).get('to'):
+        try:
+            edt = datetime.strptime(item.get('valid').get('to'), '%Y-%m-%dT%H:%M:%S.%fZ')
+        except TypeError:
+            edt = datetime(*(time.strptime(item.get('valid').get('to'), '%Y-%m-%dT%H:%M:%S.%fZ')[0:6]))
+        edt = utc_to_local(edt)
+        plot = '[COLOR red]Verfügbar bis {0} {1} Uhr[/COLOR]\n\n{2}'.format(edt.strftime('%d.%m.%Y'), edt.strftime('%H:%M'), infoLabels.get('plot'))
+        infoLabels.update(dict(plot=plot))
+
+    label = item.get('headline')
+    if item.get('valid', {}).get('from'):
+        try:
+            sdt = datetime.strptime(item.get('valid').get('from'), '%Y-%m-%dT%H:%M:%S.%fZ')
+        except TypeError:
+            sdt = datetime(*(time.strptime(item.get('valid').get('from'), '%Y-%m-%dT%H:%M:%S.%fZ')[0:6]))
+        sdt = utc_to_local(sdt)
+        label = '[COLOR blue]{0}[/COLOR] {1}'.format(sdt.strftime('%d.%m.%Y'), label)
+    
+    url = build_url({'action': 'play', 'entry': dict(domain=domain, path=item.get('url'))})
+    addFile(label=label, url=url, art=art, infoLabels=infoLabels)
+
+
+def build_pagination_dir(domain, path, cursor, page):
+    url = build_url({'action': 'pagination', 'entry': dict(domain=domain, path=path, cursor=cursor, page=page)})
+    addDir(label='--- Weiter zu Seite {0} ---'.format(page), url=url)
 
 
 def checkItemUrlExists(items, compItem):
@@ -650,10 +825,22 @@ if 'action' in params:
     action = params.get('action')
     if action == 'livechannels':
         listLiveChannels()
+    elif action == 'liveevents':
+        listLiveevents(params.get('entry'))
+    elif action == 'liveitem':
+        build_liveitem(params.get('entry'))
     elif action == 'shows':
         listShows(params.get('entry'))
     elif action == 'showcontent':
         listShowcontent(params.get('entry'))
+    elif action == 'subdirs':
+        listChildren(params.get('entry'))
+    elif action == 'videostruct':
+        listVideostruct(params.get('entry'))
+    elif action == 'videos':
+        listVideos(params.get('entry'), params.get('folder'))
+    elif action == 'pagination':
+        listPaginationVideos(params.get('entry'))
     elif action == 'play':
         playVideo(params.get('entry'))
     elif action == 'playlive':

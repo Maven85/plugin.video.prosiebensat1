@@ -1,3 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
+	<category label="Livestream">
+    	<setting label="Timingsynchronisation erzwingen" type="bool" id="sync_timing" default="false"/>
+    </category>
 </settings>
