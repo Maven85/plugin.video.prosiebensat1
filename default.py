@@ -294,26 +294,27 @@ def getListItems(data, type, domain=None, path=None, cmsId=None, content=None):
                         groupitems = groups[0].get('items', None)
                         if groupitems:
                             for groupitem in groupitems:
-                                citems = content.get('items')
-                                if type == 'show':
-                                    item = getContentInfos(groupitem, 'show')
-                                    if checkItemUrlExists(citems, item) == False:
-                                        citems.append(item)
-                                        content.update({'items': citems})
-                                elif cmsId and groupitem.get('channel').get('cmsId') == cmsId:
-                                    if not groupitem.get('videoType') and groupitem.get('headline') and (groupitem.get('headline').lower().startswith('staffel') or groupitem.get('headline').lower().startswith('season')):
-                                        content.update({'type': 'season'})
-                                        item = getContentInfos(groupitem, 'season')
+                                if groupitem:
+                                    citems = content.get('items')
+                                    if type == 'show':
+                                        item = getContentInfos(groupitem, 'show')
                                         if checkItemUrlExists(citems, item) == False:
                                             citems.append(item)
                                             content.update({'items': citems})
-                                    elif (groupitem.get('videoType') and groupitem.get('videoType').lower() == 'full') \
-                                         or (not groupitem.get('videoType') and groupitem.get('url') and groupitem.get('url').startswith(path) and groupitem.get('url').find('playlist') == -1 and groupitem.get('url').find('clip') == -1):
-                                        content.update({'type': 'episode'})
-                                        item = getContentInfos(groupitem, 'episode')
-                                        if checkItemUrlExists(citems, item) == False:
-                                            citems.append(item)
-                                            content.update({'items': citems})
+                                    elif cmsId and groupitem.get('channel').get('cmsId') == cmsId:
+                                        if not groupitem.get('videoType') and groupitem.get('headline') and (groupitem.get('headline').lower().startswith('staffel') or groupitem.get('headline').lower().startswith('season')):
+                                            content.update({'type': 'season'})
+                                            item = getContentInfos(groupitem, 'season')
+                                            if checkItemUrlExists(citems, item) == False:
+                                                citems.append(item)
+                                                content.update({'items': citems})
+                                        elif (groupitem.get('videoType') and groupitem.get('videoType').lower() == 'full') \
+                                             or (not groupitem.get('videoType') and groupitem.get('url') and groupitem.get('url').startswith(path) and groupitem.get('url').find('playlist') == -1 and groupitem.get('url').find('clip') == -1):
+                                            content.update({'type': 'episode'})
+                                            item = getContentInfos(groupitem, 'episode')
+                                            if checkItemUrlExists(citems, item) == False:
+                                                citems.append(item)
+                                                content.update({'items': citems})
 
     if not content.get('type'):
         content.update({'type': type})
@@ -493,10 +494,10 @@ def playVideo(entry):
     json_data = requests.get(json_url).json()
 
     source_id = 0
-    for stream in json_data['sources']:
-        if stream['mimetype'] == 'application/dash+xml':
-            if int(source_id) < int(stream['id']):
-                source_id = stream['id']
+    for stream in json_data.get('sources'):
+        if stream.get('mimetype') == 'application/dash+xml':
+            if int(source_id) < int(stream.get('id')):
+                source_id = stream.get('id')
 
     client_id_1 = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(video_id, salt, access_token, entry.get('path'), salt, client_name).encode('utf-8')).hexdigest())
 
@@ -507,7 +508,7 @@ def playVideo(entry):
         'client_id': client_id_1
     }))
     json_data = requests.get(json_url).json()
-    server_id = json_data['server_id']
+    server_id = json_data.get('server_id')
 
     client_id = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}{6}{7}'.format(salt, video_id, access_token, server_id, entry.get('path'), source_id, salt, client_name).encode('utf-8')).hexdigest())
     url_api_url = 'http://vas.sim-technik.de/vas/live/v2/videos/{0}/sources/url?{1}'.format(video_id, urllib.urlencode({
@@ -520,20 +521,18 @@ def playVideo(entry):
     }))
 
     json_data = requests.get(url_api_url).json()
-    for stream in json_data['sources']:
+    for stream in json_data.get('sources'):
         data = stream.get('url')
 
     li = xbmcgui.ListItem(path='{0}|{1}'.format(data, userAgent))
     li.setProperty('inputstream.adaptive.license_type', 'com.widevine.alpha')
     li.setProperty('inputstream.adaptive.manifest_type', 'mpd')
     li.setProperty('inputstreamaddon' if kodiVersion <= 18 else 'inputstream', 'inputstream.adaptive')
-
-    try:
-        lic = json_data.get('drm').get('licenseAcquisitionUrl')
-        token = json_data.get('drm').get('token')
-        li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(lic, token, userAgent, 'R{SSM}'))
-    except:
-        pass
+    
+    if json_data.get('drm') and json_data.get('drm').get('licenseAcquisitionUrl') and json_data.get('drm').get('token'):
+        drm_lic = json_data.get('drm').get('licenseAcquisitionUrl')
+        drm_token = json_data.get('drm').get('token')
+        li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(drm_lic, drm_token, userAgent, 'R{SSM}'))
 
     if entry.get('infoLabels') and len(entry.get('infoLabels')) > 0:
         li.setInfo('video', entry.get('infoLabels'))
@@ -560,7 +559,7 @@ def playLive(entry):
     server_token = data.get('server_token')
     salt = entry.get('salt', '01!8d8F_)r9]4s[qeuXfP%')
     protokol = 'dash'
-    if 'widevine' in data.get('protocols').get('dash').get('drm'):
+    if 'widevine' in data.get('protocols').get(protokol).get('drm'):
         protokol_drm = 'widevine'
         protokol_param = '{0}:{1}'.format(protokol, protokol_drm)
     else:
@@ -572,28 +571,26 @@ def playLive(entry):
         'access_token':  entry.get('access_token'),
         'client_location':  entry.get('client_location'),
         'property_name':  entry.get('property_name'),
-        'protocols': 'dash:widevine',
+        'protocols': protokol_param,
         'server_token': server_token,
         'client_token': client_token,
         'secure_delivery': 'true'
     }))
 
-    data = requests.get(url).json()
-    url = data['urls']['dash']['widevine']['url']
+    json_data = requests.get(url).json()
+    drm_data = json_data.get('urls').get(protokol).get(protokol_drm)
 
-    li = xbmcgui.ListItem(path='{0}|{1}'.format(url, userAgent))
+    li = xbmcgui.ListItem(path='{0}|{1}'.format(drm_data.get('url'), userAgent))
     li.setProperty('inputstream.adaptive.license_type', 'com.widevine.alpha')
     li.setProperty('inputstream.adaptive.manifest_type', 'mpd')
     if addon.getSetting('sync_timing') == 'true':
         li.setProperty('inputstream.adaptive.manifest_update_parameter', 'full')
     li.setProperty('inputstreamaddon' if kodiVersion <= 18 else 'inputstream', 'inputstream.adaptive')
 
-    try:
-        lic = data['urls']['dash']['widevine']['drm']['licenseAcquisitionUrl']
-        token = data['urls']['dash']['widevine']['drm']['token']
-        li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(lic, token, userAgent, 'R{SSM}'))
-    except:
-        pass
+    if drm_data.get('drm') and drm_data.get('drm').get('licenseAcquisitionUrl') and drm_data.get('drm').get('token'):
+        drm_lic = drm_data.get('drm').get('licenseAcquisitionUrl')
+        drm_token = drm_data.get('drm').get('token')
+        li.setProperty('inputstream.adaptive.license_key', '{0}?token={1}|{2}|{3}|'.format(drm_lic, drm_token, userAgent, 'R{SSM}'))
 
     xbmcplugin.setResolvedUrl(addon_handle, True, li)
 
