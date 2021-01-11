@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<addon id="plugin.video.prosiebensat1" name="ProSiebenSat.1" version="1.3.0" provider-name="Maven">
+<addon id="plugin.video.prosiebensat1" name="ProSiebenSat.1" version="1.3.1" provider-name="Maven">
 	<requires>
 		<import addon="xbmc.python" version="2.26.0"/>
 		<import addon="script.module.requests" version="2.22.0" />
