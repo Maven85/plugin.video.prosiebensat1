@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-from kodi_six.utils import py2_encode, py2_decode
+from kodi_six.utils import PY2, py2_encode, py2_decode
 
 import _strptime
 
@@ -23,14 +23,16 @@ import xbmcgui
 import xbmcplugin
 import xbmcvfs
 
-try:
-    import urllib.parse as urllib
-except ImportError:
+if PY2:
     import urllib
+    from xbmc import translatePath as xbmcvfs_translatePath
+else:
+    import urllib.parse as urllib
+    from xbmcvfs import translatePath as xbmcvfs_translatePath
 
 addon_handle = int(sys.argv[1])
 addon = xbmcaddon.Addon()
-addonPath = py2_decode(xbmc.translatePath(addon.getAddonInfo('path')))
+addonPath = py2_decode(xbmcvfs_translatePath(addon.getAddonInfo('path')))
 defaultFanart = os.path.join(addonPath, 'resources/fanart.png')
 icon = os.path.join(addonPath, 'resources/icon.png')
 baseURL = "https://www."
@@ -155,7 +157,7 @@ def listVideostruct(entry):
                     while cursor:
                         content = getPagination(entry.get('domain'), structs.get('pagination').get('id'), cursor)
                         cursor = None
-                        if content and content.get('data', None):    
+                        if content and content.get('data', None):
                             if content.get('data').get('site', None) and content.get('data').get('site').get('items', None):
                                 pagination_videos = content.get('data').get('site').get('items').get('items')
                                 if pagination_videos:
@@ -206,7 +208,7 @@ def listVideos(entry, folder):
 
 def listPaginationVideos(entry):
     content = getPagination(entry.get('domain'), entry.get('path'), entry.get('cursor'))
-    if content and content.get('data', None):    
+    if content and content.get('data', None):
         if content.get('data').get('site', None) and content.get('data').get('site').get('items', None):
             videos = content.get('data').get('site').get('items').get('items')
             if videos:
@@ -263,14 +265,14 @@ def getLiveevents(domain, std):
     url = 'https://middleware.7tv.de/ran-mega/mobile/v1/livestreams.json'
     result = requests.get(url, headers={'Accept-Encoding': 'gzip'}).json()
     return result
-    #base = 'https://magellan-api.p7s1.io/epg-mini/{0}/graphql'.format(domain)
-    #parameters = {'query': ' query EpgQuery($domain: String!, $date: DateTime, $subBrand: String) { site(domain: $domain) { epgs { upcoming: broadcast(type: UPCOMING, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primetime: broadcast(type: PRIMETIME, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primenight: broadcast(type: PRIMENIGHT, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } } } } fragment fEpgItem on EpgItem { id title description startTime endTime episode { number } season { number } tvShow { title id } images { url title copyright } links { href contentType title } } '}
-    #parameters.update({'variables': '{{"date":"{0}","domain":"{1}"}}'.format(std, domain)})
-    #url = '{0}?{1}'.format(base, urllib.urlencode(parameters).replace('+', '%20'))
-    #url = '{0}&queryhash={1}'.format(url, sha256(url.encode('utf-8')).hexdigest())
-    #xbmc.log('url = {0}'.format(url))
-    #result = requests.get(url).json()
-    #return result
+    # base = 'https://magellan-api.p7s1.io/epg-mini/{0}/graphql'.format(domain)
+    # parameters = {'query': ' query EpgQuery($domain: String!, $date: DateTime, $subBrand: String) { site(domain: $domain) { epgs { upcoming: broadcast(type: UPCOMING, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primetime: broadcast(type: PRIMETIME, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } primenight: broadcast(type: PRIMENIGHT, date: $date, subBrand: $subBrand) { items { ...fEpgItem } } } } } fragment fEpgItem on EpgItem { id title description startTime endTime episode { number } season { number } tvShow { title id } images { url title copyright } links { href contentType title } } '}
+    # parameters.update({'variables': '{{"date":"{0}","domain":"{1}"}}'.format(std, domain)})
+    # url = '{0}?{1}'.format(base, urllib.urlencode(parameters).replace('+', '%20'))
+    # url = '{0}&queryhash={1}'.format(url, sha256(url.encode('utf-8')).hexdigest())
+    # xbmc.log('url = {0}'.format(url))
+    # result = requests.get(url).json()
+    # return result
 
 
 def getListItems(data, type, domain=None, path=None, cmsId=None, content=None):
@@ -387,9 +389,9 @@ def getContentInfos(data, type):
 
             if now_item.get('images') and len(now_item.get('images')) > 0:
                 art = {'thumb': '{0}{1}'.format(now_item.get('images')[0].get('url'), '/profile:mag-648x366')}
-                infos.update({'art' : art})
+                infos.update({'art': art})
 
-            infos.update({'infoLabels' : infoLabels})
+            infos.update({'infoLabels': infoLabels})
     else:
         infos.update({'url': data.get('url') if data.get('url') else data.get('href'), 'type': type, 'contentType': data.get('contentType')})
 
@@ -445,11 +447,11 @@ def getContentInfos(data, type):
             infos.update({'cmsId': data.get('id')})
 
         infoLabels.update({'plot': data.get('info') if data.get('info') else None})
-        infos.update({'infoLabels' : infoLabels})
+        infos.update({'infoLabels': infoLabels})
 
         if data.get('picture'):
             art = {'thumb': '{0}{1}'.format(data.get('picture').get('url'), '/profile:mag-648x366')}
-            infos.update({'art' : art})
+            infos.update({'art': art})
 
     return infos
 
@@ -481,7 +483,7 @@ def playVideo(entry):
     access_token = 'seventv-web'
     salt = '01!8d8F_)r9]4s[qeuXfP%'
     client_name = ''
-    
+
     content = getContentPreview(entry.get('domain'), entry.get('path'))
     if content:
         video_id = getVideoId(content.get('data'))
@@ -502,9 +504,9 @@ def playVideo(entry):
     client_id_1 = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(video_id, salt, access_token, entry.get('path'), salt, client_name).encode('utf-8')).hexdigest())
 
     json_url = 'https://vas.sim-technik.de/vas/live/v2/videos/{0}/sources?{1}'.format(video_id, urllib.urlencode({
-        'access_token':  access_token,
-        'client_location':  entry.get('path'),
-        'client_name':  client_name,
+        'access_token': access_token,
+        'client_location': entry.get('path'),
+        'client_name': client_name,
         'client_id': client_id_1
     }))
     json_data = requests.get(json_url).json()
@@ -528,7 +530,7 @@ def playVideo(entry):
     li.setProperty('inputstream.adaptive.license_type', 'com.widevine.alpha')
     li.setProperty('inputstream.adaptive.manifest_type', 'mpd')
     li.setProperty('inputstreamaddon' if kodiVersion <= 18 else 'inputstream', 'inputstream.adaptive')
-    
+
     if json_data.get('drm') and json_data.get('drm').get('licenseAcquisitionUrl') and json_data.get('drm').get('token'):
         drm_lic = json_data.get('drm').get('licenseAcquisitionUrl')
         drm_token = json_data.get('drm').get('token')
@@ -548,9 +550,9 @@ def playLive(entry):
 
     url = 'https://vas-live-mdp.glomex.com/live/1.0/getprotocols?{0}'.format(urllib.urlencode({
         'access_token': entry.get('access_token'),
-        'client_location':  entry.get('client_location'),
-        'property_name':  entry.get('property_name'),
-        'client_token':  entry.get('client_token'),
+        'client_location': entry.get('client_location'),
+        'property_name': entry.get('property_name'),
+        'client_token': entry.get('client_token'),
         'secure_delivery': 'true'
     }))
 
@@ -568,9 +570,9 @@ def playLive(entry):
     client_token = '{0}{1}'.format(salt[:2], sha1('{0}{1}{2}{3}{4}{5}'.format(entry.get('property_name'), salt, entry.get('access_token'), server_token, entry.get('client_location'), protokol_param).encode('utf-8')).hexdigest())
 
     url = 'https://vas-live-mdp.glomex.com/live/1.0/geturls?{0}'.format(urllib.urlencode({
-        'access_token':  entry.get('access_token'),
-        'client_location':  entry.get('client_location'),
-        'property_name':  entry.get('property_name'),
+        'access_token': entry.get('access_token'),
+        'client_location': entry.get('client_location'),
+        'property_name': entry.get('property_name'),
         'protocols': protokol_param,
         'server_token': server_token,
         'client_token': client_token,
@@ -628,7 +630,7 @@ def listChildren(entry):
             nt = time.time()
             number_livestreams = 0
             content = getLiveevents(None, None)
-            for event in content.get('contents'):            
+            for event in content.get('contents'):
                 if event.get('streamdate_end') >= nt and event.get('streamdate_start') <= nt:
                     number_livestreams += 1
             label = label.format(number_livestreams)
@@ -688,20 +690,17 @@ def listLiveevents(entry):
             eventday = sdt.date()
             addFile('[COLOR gold]{0}, {1}[/COLOR]'.format(match_weekday, match_date), None, art=dict(thumb='DefaultYear.png'), isPlayable=False)
 
-        
         url = build_url({'action': 'liveitem', 'entry': dict(resource=event.get('resource'), st=event.get('streamdate_start'), et=event.get('streamdate_end'))})
         addFile('[COLOR red]{0}[/COLOR] {1}'.format(match_time, event.get('teaser').get('title')), url, contextMenuItems=contextmenuitems, art=dict(icon=event.get('teaser').get('image')))
 
-    #xbmcplugin.setContent(addon_handle, 'files')
+    # xbmcplugin.setContent(addon_handle, 'files')
     xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
 
+    # std = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    # content = getLiveevents(entry.get('domain'), std.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
 
-
-    #std = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-    #content = getLiveevents(entry.get('domain'), std.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
-
-    #contextmenuitems = [(('Aktualisieren', 'RunPlugin({0})'.format(build_url({'action': 'refresh'}))))]
-    #if content.get('data') and content.get('data').get('site') and content.get('data').get('site').get('epgs') and content.get('data').get('site').get('epgs').get('upcoming'):
+    # contextmenuitems = [(('Aktualisieren', 'RunPlugin({0})'.format(build_url({'action': 'refresh'}))))]
+    # if content.get('data') and content.get('data').get('site') and content.get('data').get('site').get('epgs') and content.get('data').get('site').get('epgs').get('upcoming'):
     #    events = content.get('data').get('site').get('epgs').get('upcoming').get('items')
     #    eventicon = os.path.join('{0}{1}'.format(addonPath, entry.get('art').get('icon')))
     #    eventday = None;
@@ -717,8 +716,8 @@ def listLiveevents(entry):
     #        url = ''#build_url({'action': 'playlive', 'entry': channel})
     #        addFile('[COLOR red]{0}[/COLOR] {1}'.format(match_time, event.get('title')), url, contextMenuItems=contextmenuitems, art=dict(icon=eventicon))
 
-    #xbmcplugin.setContent(addon_handle, 'files')
-    #xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
+    # xbmcplugin.setContent(addon_handle, 'files')
+    # xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
 
 
 def build_liveitem(entry):
@@ -793,7 +792,7 @@ def build_video(item, domain):
             sdt = datetime(*(time.strptime(item.get('valid').get('from'), '%Y-%m-%dT%H:%M:%S.%fZ')[0:6]))
         sdt = utc_to_local(sdt)
         label = '[COLOR blue]{0}[/COLOR] {1}'.format(sdt.strftime('%d.%m.%Y'), label)
-    
+
     url = build_url({'action': 'play', 'entry': dict(domain=domain, path=item.get('url'))})
     addFile(label=label, url=url, art=art, infoLabels=infoLabels)
 
